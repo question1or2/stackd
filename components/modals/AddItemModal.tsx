@@ -153,11 +153,11 @@ export default function AddItemModal({ categories, profiles, householdId, onClos
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: '0.875rem' }}>
               <div>
                 <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>Current stock</label>
-                <input type="number" value={currentStock} onChange={e => setCurrentStock(e.target.value)} placeholder="e.g. 3000" min="0" step="1" style={inputStyle} />
+                <input type="number" value={currentStock} onChange={e => setCurrentStock(e.target.value === '' ? '' : String(parseInt(e.target.value, 10)))} placeholder="e.g. 3000" min="0" step="1" style={inputStyle} />
               </div>
               <div>
                 <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>Usage rate (per day)</label>
-                <input type="number" value={usageRate} onChange={e => setUsageRate(e.target.value)} placeholder="e.g. 200" min="0" step="1" style={inputStyle} />
+                <input type="number" value={usageRate} onChange={e => setUsageRate(e.target.value === '' ? '' : String(parseInt(e.target.value, 10)))} placeholder="e.g. 200" min="0" step="1" style={inputStyle} />
               </div>
             </div>
           )}
