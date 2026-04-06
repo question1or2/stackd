@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import LanguageToggle from '@/components/LanguageToggle'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -36,27 +37,30 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <span style={{ fontSize: 12, color: 'var(--text-3)', marginLeft: 4 }}>— {household.name}</span>
           )}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-          <div style={{ display: 'flex' }}>
-            {(householdMembers ?? []).map((member, i) => (
-              <div
-                key={member.id}
-                title={member.display_name}
-                style={{
-                  width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 12, fontWeight: 600, border: '2px solid var(--bg)',
-                  background: member.avatar_color,
-                  color: member.avatar_color === '#B5D4F4' ? '#0C447C' : member.avatar_color === '#9FE1CB' ? '#085041' : '#1a1a18',
-                  marginLeft: i > 0 ? -8 : 0,
-                }}
-              >
-                {member.avatar_letter}
-              </div>
-            ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <LanguageToggle />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            <div style={{ display: 'flex' }}>
+              {(householdMembers ?? []).map((member, i) => (
+                <div
+                  key={member.id}
+                  title={member.display_name}
+                  style={{
+                    width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 12, fontWeight: 600, border: '2px solid var(--bg)',
+                    background: member.avatar_color,
+                    color: member.avatar_color === '#B5D4F4' ? '#0C447C' : member.avatar_color === '#9FE1CB' ? '#085041' : '#1a1a18',
+                    marginLeft: i > 0 ? -8 : 0,
+                  }}
+                >
+                  {member.avatar_letter}
+                </div>
+              ))}
+            </div>
+            {household && (
+              <span style={{ fontSize: 10, color: 'var(--text-3)' }}>invite: {household.invite_code}</span>
+            )}
           </div>
-          {household && (
-            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>invite: {household.invite_code}</span>
-          )}
         </div>
       </div>
       {children}

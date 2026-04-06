@@ -1,7 +1,8 @@
 'use client'
 
 import { ItemWithComputed } from '@/lib/types'
-import { formatStock, formatPrice, daysLabel } from '@/lib/utils'
+import { formatStock, formatPrice } from '@/lib/utils'
+import { useLanguage } from '@/lib/language-context'
 
 interface ItemCardProps {
   item: ItemWithComputed
@@ -33,15 +34,28 @@ const badgeStyle: Record<string, React.CSSProperties> = {
 }
 
 export default function ItemCard({ item, onCheckIn, onBuy, onArrived, onMarkBought }: ItemCardProps) {
+  const { s, lang } = useLanguage()
   const borderStyle = item.status === 'ordered' ? 'dashed' : 'solid'
   const borderColor = statusBorderColor[item.status] ?? 'var(--border)'
 
-  const badgeLabel =
-    item.status === 'ordered'
-      ? 'ordered'
-      : item.daysRemaining !== null
-        ? daysLabel(item.daysRemaining, item.tracking_mode)
-        : 'ok'
+  // Badge label
+  let badgeLabel: string
+  if (item.status === 'ordered') {
+    badgeLabel = s.ordered
+  } else if (item.daysRemaining !== null) {
+    const n = item.daysRemaining
+    if (item.tracking_mode === 'cycle') {
+      badgeLabel = s.reorder_in(n)
+    } else if (n === 0) {
+      badgeLabel = s.out_today
+    } else if (n === 1) {
+      badgeLabel = s.one_day_left
+    } else {
+      badgeLabel = s.n_days_left(n)
+    }
+  } else {
+    badgeLabel = 'ok'
+  }
 
   // Progress labels
   let leftLabel = ''
@@ -49,19 +63,21 @@ export default function ItemCard({ item, onCheckIn, onBuy, onArrived, onMarkBoug
   if (item.tracking_mode === 'depletion') {
     leftLabel = '0' + item.unit
     rightLabel = item.is_ordered
-      ? `~${formatStock(item.current_stock, item.unit)} estimated`
-      : formatStock(item.current_stock, item.unit) + ' left'
+      ? s.estimated(formatStock(item.current_stock, item.unit))
+      : s.left(formatStock(item.current_stock, item.unit))
   } else {
     if (item.last_purchase_date) {
       const d = new Date(item.last_purchase_date)
-      leftLabel = `purchased ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+      const dateStr = d.toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US', { month: 'short', day: 'numeric' })
+      leftLabel = s.purchased_on(dateStr)
     } else {
-      leftLabel = 'no purchase date'
+      leftLabel = s.no_purchase_date
     }
     if (item.last_purchase_date && item.cycle_days) {
       const d = new Date(item.last_purchase_date)
       d.setDate(d.getDate() + item.cycle_days)
-      rightLabel = `due ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+      const dueStr = d.toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US', { month: 'short', day: 'numeric' })
+      rightLabel = s.due_on(dueStr)
     }
   }
 
@@ -69,23 +85,25 @@ export default function ItemCard({ item, onCheckIn, onBuy, onArrived, onMarkBoug
   let metaLine = ''
   if (item.tracking_mode === 'depletion') {
     if (item.usage_rate) {
-      metaLine = `avg. ${item.usage_rate}${item.unit} / day`
-      if (item.is_ordered) metaLine += ' · arrives soon'
-      else if (item.daysRemaining !== null) metaLine += ` · reorder at ${item.reorder_threshold_days} days`
+      metaLine = s.avg_per_day(item.usage_rate, item.unit)
+      if (item.is_ordered) metaLine += ' ' + s.arrives_soon
+      else if (item.daysRemaining !== null) metaLine += ' ' + s.reorder_at(item.reorder_threshold_days)
     } else {
-      metaLine = 'irregular · check-in near depletion'
+      metaLine = s.irregular
     }
   } else {
     if (item.cycle_days) {
-      const weeks = item.cycle_days % 7 === 0 ? `${item.cycle_days / 7} week${item.cycle_days / 7 > 1 ? 's' : ''}` : `${item.cycle_days} days`
+      const cycleStr = item.cycle_days % 7 === 0
+        ? s.week(item.cycle_days / 7)
+        : s.days_cycle(item.cycle_days)
       if (item.last_purchase_date) {
         const d = new Date(item.last_purchase_date)
         const due = new Date(d)
         due.setDate(due.getDate() + item.cycle_days)
-        const dueStr = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        metaLine = `next purchase ${dueStr} · every ${weeks}`
+        const dueStr = due.toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US', { month: 'short', day: 'numeric' })
+        metaLine = s.next_purchase(dueStr, cycleStr)
       } else {
-        metaLine = `every ${weeks}`
+        metaLine = s.every_cycle(cycleStr)
       }
     }
   }
@@ -96,17 +114,10 @@ export default function ItemCard({ item, onCheckIn, onBuy, onArrived, onMarkBoug
 
   return (
     <div
-      style={{
-        background: 'var(--surface)',
-        border: `0.5px ${borderStyle} ${borderColor}`,
-        borderRadius: 'var(--radius-lg)',
-        padding: '1rem',
-        transition: 'box-shadow 0.2s',
-      }}
+      style={{ background: 'var(--surface)', border: `0.5px ${borderStyle} ${borderColor}`, borderRadius: 'var(--radius-lg)', padding: '1rem', transition: 'box-shadow 0.2s' }}
       onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.07)')}
       onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}
     >
-      {/* Top row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.625rem' }}>
         <span style={{ fontSize: 14, fontWeight: 600 }}>{item.name}</span>
         <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, fontWeight: 500, whiteSpace: 'nowrap', ...badgeStyle[item.status] }}>
@@ -114,46 +125,33 @@ export default function ItemCard({ item, onCheckIn, onBuy, onArrived, onMarkBoug
         </span>
       </div>
 
-      {/* Ordered note */}
       {item.is_ordered && (
         <div style={{ fontSize: 11, color: '#0F6E56', background: '#E1F5EE', borderRadius: 6, padding: '4px 8px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <circle cx="6" cy="6" r="5" stroke="#0F6E56" strokeWidth="1.2"/>
             <path d="M3.5 6l2 2 3-3" stroke="#0F6E56" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          purchased · optimistically restocked
+          {s.purchased_note}
         </div>
       )}
 
-      {/* Cycle badge */}
       {item.tracking_mode === 'cycle' && !item.is_ordered && (
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, padding: '2px 7px', background: '#E1F5EE', color: '#085041', borderRadius: 20, marginBottom: 8 }}>
-          cycle
+          {s.cycle}
         </div>
       )}
 
-      {/* Progress labels */}
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-3)', marginBottom: 4 }}>
         <span>{leftLabel}</span>
         <span>{rightLabel}</span>
       </div>
 
-      {/* Progress bar */}
       <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden', marginBottom: '0.5rem' }}>
-        <div
-          style={{
-            height: '100%', borderRadius: 2,
-            width: `${item.progressPercent}%`,
-            background: fillColor[item.status] ?? '#639922',
-            transition: 'width 0.4s ease',
-          }}
-        />
+        <div style={{ height: '100%', borderRadius: 2, width: `${item.progressPercent}%`, background: fillColor[item.status] ?? '#639922', transition: 'width 0.4s ease' }} />
       </div>
 
-      {/* Meta */}
       <div style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: '0.625rem' }}>{metaLine}</div>
 
-      {/* Assignee */}
       {assignee && (
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
           <div style={{ width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 600, background: avatarColor, color: avatarTextColor }}>
@@ -163,38 +161,25 @@ export default function ItemCard({ item, onCheckIn, onBuy, onArrived, onMarkBoug
         </div>
       )}
 
-      {/* Actions */}
       <div style={{ display: 'flex', gap: 6 }}>
         {item.tracking_mode === 'depletion' ? (
           <>
-            <button
-              onClick={() => onCheckIn(item)}
-              style={{ fontSize: 11, padding: '5px 10px', border: '0.5px solid var(--border-strong)', borderRadius: 'var(--radius)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer', fontFamily: 'inherit' }}
-            >
-              check in
+            <button onClick={() => onCheckIn(item)} style={{ fontSize: 11, padding: '5px 10px', border: '0.5px solid var(--border-strong)', borderRadius: 'var(--radius)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+              {s.check_in}
             </button>
             {item.is_ordered ? (
-              <button
-                onClick={() => onArrived(item)}
-                style={{ fontSize: 11, padding: '5px 10px', border: '0.5px solid var(--blue)', borderRadius: 'var(--radius)', background: 'var(--blue-bg)', color: 'var(--blue-text)', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' }}
-              >
-                mark arrived
+              <button onClick={() => onArrived(item)} style={{ fontSize: 11, padding: '5px 10px', border: '0.5px solid var(--blue)', borderRadius: 'var(--radius)', background: 'var(--blue-bg)', color: 'var(--blue-text)', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' }}>
+                {s.mark_arrived}
               </button>
             ) : (
-              <button
-                onClick={() => onBuy(item)}
-                style={{ fontSize: 11, padding: '5px 10px', border: '0.5px solid var(--blue)', borderRadius: 'var(--radius)', background: 'var(--blue-bg)', color: 'var(--blue-text)', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' }}
-              >
-                buy now
+              <button onClick={() => onBuy(item)} style={{ fontSize: 11, padding: '5px 10px', border: '0.5px solid var(--blue)', borderRadius: 'var(--radius)', background: 'var(--blue-bg)', color: 'var(--blue-text)', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' }}>
+                {s.buy_now}
               </button>
             )}
           </>
         ) : (
-          <button
-            onClick={() => onMarkBought(item)}
-            style={{ fontSize: 11, padding: '5px 10px', border: '0.5px solid var(--border-strong)', borderRadius: 'var(--radius)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            mark bought
+          <button onClick={() => onMarkBought(item)} style={{ fontSize: 11, padding: '5px 10px', border: '0.5px solid var(--border-strong)', borderRadius: 'var(--radius)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+            {s.mark_bought}
           </button>
         )}
       </div>

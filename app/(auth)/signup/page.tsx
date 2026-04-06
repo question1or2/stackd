@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useLanguage } from '@/lib/language-context'
 
 export default function SignupPage() {
   const router = useRouter()
+  const { s } = useLanguage()
   const [step, setStep] = useState<'account' | 'household'>('account')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -32,7 +34,7 @@ export default function SignupPage() {
     // Sign up the user
     const { data: authData, error: authError } = await supabase.auth.signUp({ email, password })
     if (authError || !authData.user) {
-      setError(authError?.message ?? 'Signup failed')
+      setError(authError?.message ?? s.signup_failed)
       setLoading(false)
       return
     }
@@ -61,7 +63,7 @@ export default function SignupPage() {
         p_avatar_color: avatarColor,
       })
       if (rpcError) {
-        setError(rpcError.message === 'Household not found' ? 'Household not found. Check your invite code.' : rpcError.message)
+        setError(rpcError.message === 'Household not found' ? s.household_not_found : rpcError.message)
         setLoading(false)
         return
       }
@@ -87,12 +89,10 @@ export default function SignupPage() {
 
         <div style={{ marginBottom: '1.5rem' }}>
           <h1 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>
-            {step === 'account' ? 'Create account' : 'Set up your household'}
+            {step === 'account' ? s.create_account : s.setup_household}
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-2)' }}>
-            {step === 'account'
-              ? 'Track supplies together with your household.'
-              : 'Create a new household or join an existing one.'}
+            {step === 'account' ? s.signup_sub : s.setup_sub}
           </p>
         </div>
 
@@ -100,18 +100,18 @@ export default function SignupPage() {
           {step === 'account' ? (
             <>
               <div style={{ marginBottom: '0.875rem' }}>
-                <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>Display name</label>
+                <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>{s.display_name}</label>
                 <input
                   type="text"
                   value={displayName}
                   onChange={e => setDisplayName(e.target.value)}
                   required
-                  placeholder="e.g. Junho"
+                  placeholder={s.display_name_placeholder}
                   style={{ width: '100%', border: '0.5px solid var(--border-strong)', borderRadius: 'var(--radius)', padding: '7px 10px', fontSize: 13, background: 'var(--surface)', color: 'var(--text)', outline: 'none', fontFamily: 'inherit' }}
                 />
               </div>
               <div style={{ marginBottom: '0.875rem' }}>
-                <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>Email</label>
+                <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>{s.email}</label>
                 <input
                   type="email"
                   value={email}
@@ -122,14 +122,14 @@ export default function SignupPage() {
                 />
               </div>
               <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>Password</label>
+                <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>{s.password}</label>
                 <input
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  placeholder="At least 6 characters"
+                  placeholder={s.password_placeholder}
                   style={{ width: '100%', border: '0.5px solid var(--border-strong)', borderRadius: 'var(--radius)', padding: '7px 10px', fontSize: 13, background: 'var(--surface)', color: 'var(--text)', outline: 'none', fontFamily: 'inherit' }}
                 />
               </div>
@@ -151,32 +151,32 @@ export default function SignupPage() {
                       border: householdMode === mode ? '0.5px solid var(--blue)' : '0.5px solid var(--border-strong)',
                     }}
                   >
-                    {mode === 'create' ? 'Create new' : 'Join existing'}
+                    {mode === 'create' ? s.create_new : s.join_existing}
                   </button>
                 ))}
               </div>
 
               {householdMode === 'create' ? (
                 <div style={{ marginBottom: '1.25rem' }}>
-                  <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>Household name</label>
+                  <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>{s.household_name}</label>
                   <input
                     type="text"
                     value={householdName}
                     onChange={e => setHouseholdName(e.target.value)}
                     required
-                    placeholder="e.g. Our Home"
+                    placeholder={s.household_placeholder}
                     style={{ width: '100%', border: '0.5px solid var(--border-strong)', borderRadius: 'var(--radius)', padding: '7px 10px', fontSize: 13, background: 'var(--surface)', color: 'var(--text)', outline: 'none', fontFamily: 'inherit' }}
                   />
                 </div>
               ) : (
                 <div style={{ marginBottom: '1.25rem' }}>
-                  <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>Invite code</label>
+                  <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>{s.invite_code}</label>
                   <input
                     type="text"
                     value={inviteCode}
                     onChange={e => setInviteCode(e.target.value)}
                     required
-                    placeholder="8-character code"
+                    placeholder={s.invite_placeholder}
                     style={{ width: '100%', border: '0.5px solid var(--border-strong)', borderRadius: 'var(--radius)', padding: '7px 10px', fontSize: 13, background: 'var(--surface)', color: 'var(--text)', outline: 'none', fontFamily: 'inherit', letterSpacing: '0.05em' }}
                   />
                 </div>
@@ -197,7 +197,7 @@ export default function SignupPage() {
                 onClick={() => setStep('account')}
                 style={{ flex: 1, padding: '8px 16px', fontSize: 13, border: '0.5px solid var(--border-strong)', borderRadius: 'var(--radius)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                Back
+                {s.back}
               </button>
             )}
             <button
@@ -205,14 +205,14 @@ export default function SignupPage() {
               disabled={loading}
               style={{ flex: 1, background: 'var(--blue)', color: '#fff', border: '0.5px solid var(--blue)', borderRadius: 'var(--radius)', padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: 'inherit' }}
             >
-              {loading ? 'Creating…' : step === 'account' ? 'Continue' : 'Create account'}
+              {loading ? s.creating : step === 'account' ? s.continue_btn : s.create_account}
             </button>
           </div>
         </form>
 
         <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: '1.25rem', textAlign: 'center' }}>
-          Already have an account?{' '}
-          <Link href="/login" style={{ color: 'var(--blue)', textDecoration: 'none' }}>Sign in</Link>
+          {s.already_account}{' '}
+          <Link href="/login" style={{ color: 'var(--blue)', textDecoration: 'none' }}>{s.sign_in}</Link>
         </p>
       </div>
     </div>

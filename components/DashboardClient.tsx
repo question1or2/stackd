@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Category, Profile, Item, ItemWithComputed } from '@/lib/types'
 import { enrichItem } from '@/lib/utils'
+import { useLanguage } from '@/lib/language-context'
 import CategoryGroup from './CategoryGroup'
 import ItemCard from './ItemCard'
 import ReminderCard from './ReminderCard'
@@ -42,12 +43,12 @@ export default function DashboardClient({
   uncategorized: initialUncategorized,
   reminders: initialReminders,
 }: DashboardClientProps) {
+  const { s } = useLanguage()
   const [items, setItems] = useState<ItemWithComputed[]>(initialItems)
   const [categories, setCategories] = useState<Category[]>(initialCategories)
   const [modal, setModal] = useState<ModalState>(null)
   const [toast, setToast] = useState<string | null>(null)
 
-  // Recompute groupings from current items/categories
   const grouped: Record<string, ItemWithComputed[]> = {}
   const uncategorized: ItemWithComputed[] = []
   for (const item of items) {
@@ -63,49 +64,29 @@ export default function DashboardClient({
   const refreshItems = useCallback(async () => {
     const supabase = createClient()
     const [{ data: rawItems }, { data: cats }] = await Promise.all([
-      supabase
-        .from('items')
-        .select('*')
-        .eq('household_id', householdId)
-        .eq('is_archived', false)
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('categories')
-        .select('*')
-        .eq('household_id', householdId)
-        .order('sort_order', { ascending: true }),
+      supabase.from('items').select('*').eq('household_id', householdId).eq('is_archived', false).order('created_at', { ascending: true }),
+      supabase.from('categories').select('*').eq('household_id', householdId).order('sort_order', { ascending: true }),
     ])
     const allCategories = cats ?? []
     setCategories(allCategories)
     setItems((rawItems ?? []).map((item: Item) => enrichItem(item, allCategories, profiles)))
   }, [householdId, profiles])
 
-  // Supabase realtime subscription
   useEffect(() => {
     const supabase = createClient()
     const channel = supabase
       .channel(`household:${householdId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `household_id=eq.${householdId}` }, () => {
-        refreshItems()
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories', filter: `household_id=eq.${householdId}` }, () => {
-        refreshItems()
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `household_id=eq.${householdId}` }, () => { refreshItems() })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories', filter: `household_id=eq.${householdId}` }, () => { refreshItems() })
       .subscribe()
-
     return () => { supabase.removeChannel(channel) }
   }, [householdId, refreshItems])
 
-  function showToast(msg: string) {
-    setToast(msg)
-  }
-
   return (
     <>
-      {/* Section header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-          Household supplies
+          {s.household_supplies}
         </span>
         <div style={{ display: 'flex', gap: 8 }}>
           <button
@@ -114,7 +95,7 @@ export default function DashboardClient({
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2, #eee)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            + category
+            {s.add_category}
           </button>
           <button
             onClick={() => setModal({ type: 'add' })}
@@ -122,12 +103,11 @@ export default function DashboardClient({
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--blue-bg)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            + add item
+            {s.add_item}
           </button>
         </div>
       </div>
 
-      {/* Category groups */}
       {categories.map(cat => {
         const catItems = grouped[cat.id]
         if (!catItems?.length) return null
@@ -144,12 +124,11 @@ export default function DashboardClient({
         )
       })}
 
-      {/* Uncategorized */}
       {uncategorized.length > 0 && (
         <div style={{ marginBottom: '2.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.875rem' }}>
             <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--surface)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📦</div>
-            <span style={{ fontSize: 16, fontWeight: 600 }}>Other</span>
+            <span style={{ fontSize: 16, fontWeight: 600 }}>{s.other}</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
             {uncategorized.map(item => (
@@ -166,73 +145,42 @@ export default function DashboardClient({
         </div>
       )}
 
-      {/* Empty state */}
       {items.length === 0 && (
         <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-3)' }}>
           <div style={{ fontSize: 32, marginBottom: '0.75rem' }}>📦</div>
-          <p style={{ fontSize: 14, marginBottom: '0.5rem' }}>No items yet.</p>
-          <p style={{ fontSize: 12 }}>Add your first household supply item to start tracking.</p>
+          <p style={{ fontSize: 14, marginBottom: '0.5rem' }}>{s.no_items}</p>
+          <p style={{ fontSize: 12 }}>{s.no_items_sub}</p>
         </div>
       )}
 
-      {/* Divider + Reminders */}
       {reminders.length > 0 && (
         <>
           <div style={{ height: '0.5px', background: 'var(--border)', margin: '2rem 0' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-              Active reminders
+              {s.active_reminders}
             </span>
           </div>
           {reminders.map(item => (
-            <ReminderCard
-              key={item.id}
-              item={item}
-              onBuy={i => setModal({ type: 'buy', item: i })}
-            />
+            <ReminderCard key={item.id} item={item} onBuy={i => setModal({ type: 'buy', item: i })} />
           ))}
         </>
       )}
 
-      {/* Add Category Modal */}
       {modal?.type === 'addCategory' && (
-        <AddCategoryModal
-          householdId={householdId}
-          onClose={() => setModal(null)}
-          onSuccess={(msg: string) => { showToast(msg); refreshItems() }}
-        />
+        <AddCategoryModal householdId={householdId} onClose={() => setModal(null)} onSuccess={(msg: string) => { setToast(msg); refreshItems() }} />
       )}
-
-      {/* Modals */}
       {modal?.type === 'add' && (
-        <AddItemModal
-          categories={categories}
-          profiles={profiles}
-          householdId={householdId}
-          onClose={() => { setModal(null); refreshItems() }}
-          onSuccess={msg => { showToast(msg); refreshItems() }}
-        />
+        <AddItemModal categories={categories} profiles={profiles} householdId={householdId} onClose={() => { setModal(null); refreshItems() }} onSuccess={msg => { setToast(msg); refreshItems() }} />
       )}
       {modal?.type === 'checkin' && (
-        <CheckinModal
-          item={modal.item}
-          onClose={() => { setModal(null); refreshItems() }}
-          onSuccess={msg => { showToast(msg); refreshItems() }}
-        />
+        <CheckinModal item={modal.item} onClose={() => { setModal(null); refreshItems() }} onSuccess={msg => { setToast(msg); refreshItems() }} />
       )}
       {modal?.type === 'buy' && (
-        <BuyModal
-          item={modal.item}
-          onClose={() => { setModal(null); refreshItems() }}
-          onSuccess={msg => { showToast(msg); refreshItems() }}
-        />
+        <BuyModal item={modal.item} onClose={() => { setModal(null); refreshItems() }} onSuccess={msg => { setToast(msg); refreshItems() }} />
       )}
       {modal?.type === 'arrived' && (
-        <ArrivedModal
-          item={modal.item}
-          onClose={() => { setModal(null); refreshItems() }}
-          onSuccess={msg => { showToast(msg); refreshItems() }}
-        />
+        <ArrivedModal item={modal.item} onClose={() => { setModal(null); refreshItems() }} onSuccess={msg => { setToast(msg); refreshItems() }} />
       )}
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

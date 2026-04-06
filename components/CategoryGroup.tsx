@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Category, ItemWithComputed } from '@/lib/types'
 import { updateCategoryName } from '@/app/actions'
+import { useLanguage } from '@/lib/language-context'
 import ItemCard from './ItemCard'
 
 interface CategoryGroupProps {
@@ -15,6 +16,7 @@ interface CategoryGroupProps {
 }
 
 export default function CategoryGroup({ category, items, onCheckIn, onBuy, onArrived, onMarkBought }: CategoryGroupProps) {
+  const { s } = useLanguage()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(category.name)
   const [saving, setSaving] = useState(false)
@@ -60,20 +62,13 @@ export default function CategoryGroup({ category, items, onCheckIn, onBuy, onArr
             onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--blue)')}
             onMouseLeave={e => (e.currentTarget.style.borderColor = 'transparent')}
           >
-            edit name
+            {s.edit_name}
           </button>
         )}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
         {items.map(item => (
-          <ItemCard
-            key={item.id}
-            item={item}
-            onCheckIn={onCheckIn}
-            onBuy={onBuy}
-            onArrived={onArrived}
-            onMarkBought={onMarkBought}
-          />
+          <ItemCard key={item.id} item={item} onCheckIn={onCheckIn} onBuy={onBuy} onArrived={onArrived} onMarkBought={onMarkBought} />
         ))}
       </div>
     </div>

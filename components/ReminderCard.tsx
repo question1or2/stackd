@@ -2,6 +2,7 @@
 
 import { ItemWithComputed } from '@/lib/types'
 import { formatPrice } from '@/lib/utils'
+import { useLanguage } from '@/lib/language-context'
 
 interface ReminderCardProps {
   item: ItemWithComputed
@@ -9,18 +10,18 @@ interface ReminderCardProps {
 }
 
 export default function ReminderCard({ item, onBuy }: ReminderCardProps) {
+  const { s } = useLanguage()
   const isUrgent = item.status === 'urgent'
   const assignee = item.nextBuyerProfile ?? item.defaultBuyerProfile
   const avatarColor = assignee?.avatar_color ?? '#B5D4F4'
   const avatarTextColor = avatarColor === '#B5D4F4' ? '#0C447C' : avatarColor === '#9FE1CB' ? '#085041' : '#1a1a18'
 
   const title = item.tracking_mode === 'depletion'
-    ? `${item.name} is running low — ${item.daysRemaining} days left`
-    : `${item.name} — reorder window open`
+    ? s.running_low(item.name, item.daysRemaining ?? 0)
+    : s.reorder_window(item.name)
 
   return (
     <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '0.875rem 1rem', marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-      {/* Icon */}
       <div style={{ width: 30, height: 30, borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: isUrgent ? 'var(--red-bg)' : 'var(--amber-bg)' }}>
         {isUrgent ? (
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -37,26 +38,19 @@ export default function ReminderCard({ item, onBuy }: ReminderCardProps) {
         )}
       </div>
 
-      {/* Body */}
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 3 }}>{title}</div>
         <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
-          Last price {formatPrice(item.last_price)}
+          {s.last_price} {formatPrice(item.last_price)}
           {item.product_url && (
-            <>
-              {' · '}
-              <a href={item.product_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--blue)', textDecoration: 'none' }}>
-                open product page ↗
-              </a>
-            </>
+            <>{' · '}<a href={item.product_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--blue)', textDecoration: 'none' }}>{s.open_product}</a></>
           )}
         </div>
         {isUrgent && (
-          <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>Reminding daily until purchased</div>
+          <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>{s.reminding_daily}</div>
         )}
       </div>
 
-      {/* Right */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
         {assignee && (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-2)' }}>
@@ -66,11 +60,8 @@ export default function ReminderCard({ item, onBuy }: ReminderCardProps) {
             {assignee.display_name}
           </div>
         )}
-        <button
-          onClick={() => onBuy(item)}
-          style={{ fontSize: 11, padding: '5px 10px', border: '0.5px solid var(--blue)', borderRadius: 'var(--radius)', background: 'var(--blue-bg)', color: 'var(--blue-text)', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' }}
-        >
-          confirm buy
+        <button onClick={() => onBuy(item)} style={{ fontSize: 11, padding: '5px 10px', border: '0.5px solid var(--blue)', borderRadius: 'var(--radius)', background: 'var(--blue-bg)', color: 'var(--blue-text)', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' }}>
+          {s.confirm_buy}
         </button>
       </div>
     </div>

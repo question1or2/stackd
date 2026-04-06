@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useLanguage } from '@/lib/language-context'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { s } = useLanguage()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -42,13 +44,13 @@ export default function LoginPage() {
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Sign in</h1>
-          <p style={{ fontSize: 13, color: 'var(--text-2)' }}>Welcome back to your household tracker.</p>
+          <h1 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>{s.sign_in}</h1>
+          <p style={{ fontSize: 13, color: 'var(--text-2)' }}>{s.sign_in_sub}</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '0.875rem' }}>
-            <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>Email</label>
+            <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>{s.email}</label>
             <input
               type="email"
               value={email}
@@ -59,7 +61,7 @@ export default function LoginPage() {
             />
           </div>
           <div style={{ marginBottom: '1.25rem' }}>
-            <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>Password</label>
+            <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>{s.password}</label>
             <input
               type="password"
               value={password}
@@ -81,13 +83,13 @@ export default function LoginPage() {
             disabled={loading}
             style={{ width: '100%', background: 'var(--blue)', color: '#fff', border: '0.5px solid var(--blue)', borderRadius: 'var(--radius)', padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: 'inherit' }}
           >
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? s.signing_in : s.sign_in}
           </button>
         </form>
 
         <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: '1.25rem', textAlign: 'center' }}>
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" style={{ color: 'var(--blue)', textDecoration: 'none' }}>Create one</Link>
+          {s.no_account}{' '}
+          <Link href="/signup" style={{ color: 'var(--blue)', textDecoration: 'none' }}>{s.create_one}</Link>
         </p>
       </div>
     </div>

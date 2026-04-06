@@ -1,19 +1,18 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { LanguageProvider } from '@/lib/language-context'
 
 export const metadata: Metadata = {
   title: 'stockd — household supply tracker',
   description: 'Track your household supplies and never run out again.',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <LanguageProvider>{children}</LanguageProvider>
+      </body>
     </html>
   )
 }
