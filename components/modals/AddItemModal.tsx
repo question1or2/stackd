@@ -143,8 +143,8 @@ export default function AddItemModal({ categories, profiles, householdId, onClos
           <div style={{ marginBottom: '0.875rem' }}>
             <label style={{ fontSize: 12, color: 'var(--text-2)', display: 'block', marginBottom: 5 }}>Tracking mode</label>
             <select value={trackingMode} onChange={e => setTrackingMode(e.target.value as 'depletion' | 'cycle')} style={inputStyle}>
-              <option value="depletion">Depletion — stock runs down (food, medicine)</option>
-              <option value="cycle">Cycle — scheduled reorder (sand, detergent)</option>
+              <option value="depletion">Depletion — runs down over time</option>
+              <option value="cycle">Cycle — scheduled reorder</option>
             </select>
           </div>
 
