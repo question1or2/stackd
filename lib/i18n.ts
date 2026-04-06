@@ -150,6 +150,7 @@ export const t = {
     signing_in: 'Signing in…',
     create_one: 'Create one',
     household_not_found: 'Household not found. Check your invite code.',
+    logout: 'log out',
   },
 
   ko: {
@@ -301,6 +302,7 @@ export const t = {
     signing_in: '로그인 중…',
     create_one: '계정 만들기',
     household_not_found: '가구를 찾을 수 없습니다. 초대 코드를 확인하세요.',
+    logout: '로그아웃',
   },
 } as const
 

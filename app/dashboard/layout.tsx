@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import LanguageToggle from '@/components/LanguageToggle'
+import LogoutButton from '@/components/LogoutButton'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -39,6 +40,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <LanguageToggle />
+          <LogoutButton />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
             <div style={{ display: 'flex' }}>
               {(householdMembers ?? []).map((member, i) => (
