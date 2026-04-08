@@ -95,7 +95,7 @@ export default function DashboardClient({
     <>
       {!hasTelegram && (
         <a
-          href={`https://t.me/stocked_reminder_bot?start=${currentUserId}`}
+          href={`https://t.me/stockd_reminder_bot?start=${currentUserId}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => setHasTelegram(true)}
