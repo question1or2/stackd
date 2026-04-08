@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Category, Profile, Item, ItemWithComputed } from '@/lib/types'
 import { enrichItem } from '@/lib/utils'
 import { useLanguage } from '@/lib/language-context'
+import { toggleItemNotify } from '@/app/actions'
 import CategoryGroup from './CategoryGroup'
 import ItemCard from './ItemCard'
 import ReminderCard from './ReminderCard'
@@ -21,6 +22,7 @@ interface DashboardClientProps {
   profiles: Profile[]
   householdId: string
   currentUserId: string
+  hasTelegram: boolean
   grouped: Record<string, ItemWithComputed[]>
   uncategorized: ItemWithComputed[]
   reminders: ItemWithComputed[]
@@ -39,6 +41,8 @@ export default function DashboardClient({
   categories: initialCategories,
   profiles,
   householdId,
+  currentUserId,
+  hasTelegram: initialHasTelegram,
   grouped: initialGrouped,
   uncategorized: initialUncategorized,
   reminders: initialReminders,
@@ -48,6 +52,11 @@ export default function DashboardClient({
   const [categories, setCategories] = useState<Category[]>(initialCategories)
   const [modal, setModal] = useState<ModalState>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [hasTelegram, setHasTelegram] = useState(initialHasTelegram)
+
+  async function handleToggleNotify(item: ItemWithComputed) {
+    await toggleItemNotify(item.id, !item.notify_enabled)
+  }
 
   const grouped: Record<string, ItemWithComputed[]> = {}
   const uncategorized: ItemWithComputed[] = []
@@ -84,6 +93,23 @@ export default function DashboardClient({
 
   return (
     <>
+      {!hasTelegram && (
+        <a
+          href={`https://t.me/stocked_reminder_bot?start=${currentUserId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setHasTelegram(true)}
+          style={{ display: 'block', fontSize: 12, color: 'var(--blue)', marginBottom: '1rem', textDecoration: 'none' }}
+        >
+          🔔 {s.enable_reminders}
+        </a>
+      )}
+      {hasTelegram && (
+        <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: '1rem' }}>
+          🔔 {s.telegram_connected}
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
           {s.household_supplies}
@@ -120,6 +146,7 @@ export default function DashboardClient({
             onBuy={item => setModal({ type: 'buy', item })}
             onArrived={item => setModal({ type: 'arrived', item })}
             onMarkBought={item => setModal({ type: 'checkin', item })}
+            onToggleNotify={handleToggleNotify}
           />
         )
       })}
@@ -139,6 +166,7 @@ export default function DashboardClient({
                 onBuy={i => setModal({ type: 'buy', item: i })}
                 onArrived={i => setModal({ type: 'arrived', item: i })}
                 onMarkBought={i => setModal({ type: 'checkin', item: i })}
+                onToggleNotify={handleToggleNotify}
               />
             ))}
           </div>

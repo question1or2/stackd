@@ -151,6 +151,10 @@ export const t = {
     create_one: 'Create one',
     household_not_found: 'Household not found. Check your invite code.',
     logout: 'log out',
+    notify: 'notify',
+    mute: 'mute',
+    enable_reminders: 'Enable Telegram reminders →',
+    telegram_connected: 'Telegram connected ✓',
   },
 
   ko: {
@@ -303,6 +307,10 @@ export const t = {
     create_one: '계정 만들기',
     household_not_found: '가구를 찾을 수 없습니다. 초대 코드를 확인하세요.',
     logout: '로그아웃',
+    notify: '알림',
+    mute: '끄기',
+    enable_reminders: 'Telegram 알림 켜기 →',
+    telegram_connected: 'Telegram 연결됨 ✓',
   },
 } as const
 

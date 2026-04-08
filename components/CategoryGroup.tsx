@@ -13,9 +13,10 @@ interface CategoryGroupProps {
   onBuy: (item: ItemWithComputed) => void
   onArrived: (item: ItemWithComputed) => void
   onMarkBought: (item: ItemWithComputed) => void
+  onToggleNotify: (item: ItemWithComputed) => void
 }
 
-export default function CategoryGroup({ category, items, onCheckIn, onBuy, onArrived, onMarkBought }: CategoryGroupProps) {
+export default function CategoryGroup({ category, items, onCheckIn, onBuy, onArrived, onMarkBought, onToggleNotify }: CategoryGroupProps) {
   const { s } = useLanguage()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(category.name)
@@ -68,7 +69,7 @@ export default function CategoryGroup({ category, items, onCheckIn, onBuy, onArr
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
         {items.map(item => (
-          <ItemCard key={item.id} item={item} onCheckIn={onCheckIn} onBuy={onBuy} onArrived={onArrived} onMarkBought={onMarkBought} />
+          <ItemCard key={item.id} item={item} onCheckIn={onCheckIn} onBuy={onBuy} onArrived={onArrived} onMarkBought={onMarkBought} onToggleNotify={onToggleNotify} />
         ))}
       </div>
     </div>

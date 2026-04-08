@@ -71,6 +71,7 @@ export default async function DashboardPage() {
       profiles={allProfiles}
       householdId={profile.household_id}
       currentUserId={user.id}
+      hasTelegram={!!profile.telegram_chat_id}
       grouped={grouped}
       uncategorized={uncategorized}
       reminders={reminders}

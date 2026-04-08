@@ -13,6 +13,7 @@ export interface Profile {
   display_name: string
   avatar_letter: string
   avatar_color: string
+  telegram_chat_id: string | null
 }
 
 export interface Category {
@@ -44,6 +45,7 @@ export interface Item {
   ordered_quantity: number | null
   ordered_at: string | null
   is_archived: boolean
+  notify_enabled: boolean
 }
 
 export interface Purchase {

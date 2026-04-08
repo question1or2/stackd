@@ -10,6 +10,7 @@ interface ItemCardProps {
   onBuy: (item: ItemWithComputed) => void
   onArrived: (item: ItemWithComputed) => void
   onMarkBought: (item: ItemWithComputed) => void
+  onToggleNotify: (item: ItemWithComputed) => void
 }
 
 const statusBorderColor: Record<string, string> = {
@@ -33,7 +34,7 @@ const badgeStyle: Record<string, React.CSSProperties> = {
   ordered: { background: '#E1F5EE', color: '#085041' },
 }
 
-export default function ItemCard({ item, onCheckIn, onBuy, onArrived, onMarkBought }: ItemCardProps) {
+export default function ItemCard({ item, onCheckIn, onBuy, onArrived, onMarkBought, onToggleNotify }: ItemCardProps) {
   const { s, lang } = useLanguage()
   const borderStyle = item.status === 'ordered' ? 'dashed' : 'solid'
   const borderColor = statusBorderColor[item.status] ?? 'var(--border)'
@@ -161,7 +162,7 @@ export default function ItemCard({ item, onCheckIn, onBuy, onArrived, onMarkBoug
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 6 }}>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
         {item.tracking_mode === 'depletion' ? (
           <>
             <button onClick={() => onCheckIn(item)} style={{ fontSize: 11, padding: '5px 10px', border: '0.5px solid var(--border-strong)', borderRadius: 'var(--radius)', background: 'transparent', color: 'var(--text-2)', cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -182,6 +183,13 @@ export default function ItemCard({ item, onCheckIn, onBuy, onArrived, onMarkBoug
             {s.mark_bought}
           </button>
         )}
+        <button
+          onClick={() => onToggleNotify(item)}
+          title={item.notify_enabled ? s.mute : s.notify}
+          style={{ marginLeft: 'auto', fontSize: 13, padding: '4px 6px', border: 'none', borderRadius: 'var(--radius)', background: 'transparent', cursor: 'pointer', opacity: item.notify_enabled ? 1 : 0.35, lineHeight: 1 }}
+        >
+          🔔
+        </button>
       </div>
     </div>
   )

@@ -170,6 +170,19 @@ export async function updateCategoryName(categoryId: string, name: string) {
   revalidatePath('/dashboard')
 }
 
+export async function toggleItemNotify(itemId: string, enabled: boolean) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  await supabase
+    .from('items')
+    .update({ notify_enabled: enabled })
+    .eq('id', itemId)
+
+  revalidatePath('/dashboard')
+}
+
 export async function addCategory(householdId: string, name: string, icon: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
