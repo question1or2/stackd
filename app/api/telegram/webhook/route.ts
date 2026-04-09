@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       .eq('id', userId)
 
     if (error) {
-      await sendMessage(chatId, `❌ Error: ${error.message}`)
+      await sendMessage(chatId, '❌ Could not link your account. Please try again from the app.')
     } else {
       await sendMessage(chatId, "✅ Connected! You'll get daily reminders here when items need restocking.")
     }
